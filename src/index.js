@@ -1,42 +1,34 @@
 /* eslint-disable no-restricted-syntax */
-import _ from 'lodash';
-import { readFileSync } from 'fs';
-import path from 'path';
+import { readFileSync } from 'node:fs';
+import path from 'node:path';
+import parser from './parsers.js';
+import makeTree from './buildTree.js';
+import checkFormat from './formaters/index.js';
 
-const buildFixturesPath = (fileName) => path.resolve('__fixtures__', fileName);
+const getAbsolutPath = (filepath) => path.resolve('__fixtures__', filepath);
 
-const genDiff = (filepath1, filepath2) => {
-  const data1 = readFileSync(buildFixturesPath(filepath1), 'utf-8');
-  const data2 = readFileSync(buildFixturesPath(filepath2), 'utf-8');
+const getFormat = (fileName) => {
+  const format = path.extname(fileName).slice(1);
+  return format;
+};
 
-  const dataParse1 = JSON.parse(data1);
-  const dataParse2 = JSON.parse(data2);
+const fileContent = (filepath) => {
+  const content = readFileSync(getAbsolutPath(filepath), 'utf-8');
+  return content;
+};
 
-  const key1 = _.keys(dataParse1);
-  const key2 = _.keys(dataParse2);
-  const allKeys = _.union(key1, key2);
+const dataFile = (file) => {
+  const content = fileContent(file);
+  const format = getFormat(file);
+  const parsedFile = parser(content, format);
+  return parsedFile;
+};
 
-  const diff = {};
-  
-  for (const key of allKeys) {
-    switch (true) {
-      case !key1.includes(key):
-        diff[`+ ${key}`] = dataParse2[key];
-        break;
-      case !key2.includes(key):
-        diff[`- ${key}`] = dataParse1[key];
-        break;
-      case dataParse1[key] !== dataParse2[key]:
-        diff[`- ${key}`] = dataParse1[key];
-        diff[`+ ${key}`] = dataParse2[key];
-        break;
-      case dataParse1[key] === dataParse2[key]:
-        diff[`  ${key}`] = dataParse1[key];
-        break;
-      default:
-        break;
-    }
-  }
-  return diff;
+const genDiff = (filepath1, filepath2, format = 'stylish') => {
+ const data1 = dataFile(filepath1);
+ const data2 = dataFile(filepath2);
+ const tree = makeTree(data1, data2);
+ const result = checkFormat(tree, format);
+ return result;
 };
 export default genDiff;

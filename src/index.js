@@ -25,10 +25,10 @@ const dataFile = (file) => {
 };
 
 const genDiff = (filepath1, filepath2, format = 'stylish') => {
- const data1 = dataFile(filepath1);
- const data2 = dataFile(filepath2);
- const tree = makeTree(data1, data2);
- const result = checkFormat(tree, format);
- return result;
+  const data1 = dataFile(filepath1);
+  const data2 = dataFile(filepath2);
+  const tree = makeTree(data1, data2);
+  const result = checkFormat(tree, format);
+  return result;
 };
 export default genDiff;
